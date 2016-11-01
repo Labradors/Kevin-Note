@@ -63,3 +63,11 @@ public class CustomViewLine extends View {
 }
 
 ```
+
+①UNSPECIFIED：父View没有对子View施加任何约束。它可以是任何它想要的大小。
+②EXACTLY：父View已经确定了子View的确切尺寸。子View将被限制在给定的界限内，而忽略其本身的大小。
+③AT_MOST：子View的大小不能超过指定的大小
+
+MeasureSpec.UNSPECIFIED The parent has not imposed any constraint on the child. It can be whatever size it wants. 这种情况比较少，一般用不到。标示父控件没有给子View任何显示- - - -对应的二进制表示: 00
+MeasureSpec.EXACTLY The parent has determined an exact size for the child. The child is going to be given those bounds regardless of how big it wants to be. 理解成MATCH_PARENT或者在布局中指定了宽高值，如layout:width=’50dp’. - - - - 对应的二进制表示:01
+MeasureSpec.AT_MOST The child can be as large as it wants up to the specified size.理解成WRAP_CONTENT,这是的值是父View可以允许的最大的值，只要不超过这个值都可以。- - - - 对应的二进制表示:10
