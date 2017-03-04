@@ -8,7 +8,12 @@
 6. 说明 private/protect/public 访问修饰符的作用范围，并写函数读取一个对象的 private 变量 
 7. 采用你熟悉的 MVC 框架，如 struts/springMVC/servlet 等，编程写出上传一个小文件并返回文件的大小、格式等信息，要求完整写出前端布局及 action 处理，可以直接采用 servlet 
 8. 编程写出一个银行转账案例，如 A 账号向 B 账户转账，尽可能包含转账账户、转账金额、接收账号、银行流水号、汇率等信息，要求考虑百万以上并发，保证事务的流畅性和安全性
-9. HashMap 和 HashTable 的区别
+9. HashMap 和 HashTable 的区别和优缺点
 10. ＝＝ 和 equals 方法的区别
-11. Servlet运行原理和细节。
-12. 
+11. JVM的结构和工作原理
+12. ​Java内存模型
+13. 各种GC算法
+14. Classloader的加载原理
+15. JVM监控及调优
+16. Java多线程
+17. I/O

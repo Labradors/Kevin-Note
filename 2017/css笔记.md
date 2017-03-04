@@ -72,21 +72,21 @@ a:active{
 - 设置了浮动元素不占原来的位置
 - 将行内元素转化为行内块元素。
 - 当子元素设置了浮动，父元素又没有设置高度，造成了页面布局紊乱。这种情况下，进行清除浮动。
-- 设置clear: left right both
-- 设置overflow: hidden
-- 使用伪元素: .clearfix:after{content:"",display:block;clear:both;height:0;light-height:0;visiblity:hidden}  .clearfix{zoom:1;}在父元素中设置。(这事最完美的一种方式)
+- 设置`clear: left right both`
+- 设置`overflow: hidden`
+- 使用伪元素: `.clearfix:after{content:"",display:block;clear:both;height:0;light-height:0;visiblity:hidden}  .clearfix{zoom:1;}`在父元素中设置。(这事最完美的一种方式)
 - overflow的使用：hidden作用的将超出部分进行隐藏。auto是自动。scroll表示添加滚动条。
 
 ## 定位
 
 ### 静态定位
 
-- position: static
+- `position: static`
 - 静态定位就是元素标准流的显示方式。
 
 ### 绝对定位
 
-- position: absolute
+- `position: absolute`
 - 元素设置绝对位置后，可根据上下左右进行调整。
 - 当给一个单独的元素设置绝对定位，以浏览器body左上角为基准定位。
 - 当盒子发生嵌套关系，如果父盒子没有设置定位，那么以浏览器左上角设置定位。
@@ -96,7 +96,7 @@ a:active{
 
 ### 相对定位
 
-- position: relative
+- `position: relative`
 - 元素设置相对定位后占原来的位置。
 - 设置相对定位是以自己为参照物的。
 - 相对定位不能转换元素的模式。
@@ -104,9 +104,48 @@ a:active{
 
 ### 固定定位
 
-- position:fixed;
+- `position:fixed;`
 - 固定定位不占位置，脱标。固定在某处。
 - 将行内元素转换为行内块。
 
 ## 定位的盒子居中显示
 
+`left: 50%;margin-left: width/2`
+
+## 规避脱标流
+
+### 标签包含规范(html 标签嵌套规则)
+
+- div最好用，用在哪儿都行。
+- p标签不能包含div，标题标签，ul标签。
+- 标题标签可以包含其他标签。
+- 行内元素最好不要包含其他标签。
+
+
+### css可见性
+
+- 图片与文字垂直居中，`vertical-align:middle`.
+- `overflow: hidden.将超过部分进行隐藏`
+- `display:none`将元素进行隐藏，不占位置。
+- `display: block`将元素显示(与js搭配更搭)
+- `visiblity:hidden`将元素隐藏。隐藏后还占原来的位置
+
+### 文字内容移除
+
+- 可以做以前所想的一页显示多个。
+- `text-indent: -20px;`把文字往不可见区域设置。
+
+### 精灵图的使用和制造
+
+- 当父盒子没有设置边框的时候，如果给子盒子设置`margin-top`则会让父盒子移动，这种方式很卵蛋。但可以通过`overflow:hidden`解决。
+
+- 不兼容手机的网站在做什么jb
+
+
+## 复习
+
+- 属性选择器
+- 自定义列表
+- 子代选择器`div>span`
+- 后代选择器`div span`
+- ​
