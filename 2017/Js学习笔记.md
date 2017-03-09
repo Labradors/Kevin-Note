@@ -18,6 +18,7 @@ javascript:;表示这是一个空连接。点击之后没任何反应。
 eg:
 <a href="###"></a>
 <a href="javascript:;"></a>
+js中input中输入的value为string类型，如果判断数字，需要转换
 ```
 
 ### 函数声明
@@ -43,3 +44,4 @@ $(id).onmouseover=function(){
 docment.getElementsByTagName();
 ```
 
+### 
