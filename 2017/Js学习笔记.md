@@ -20,3 +20,26 @@ eg:
 <a href="javascript:;"></a>
 ```
 
+### 函数声明
+
+### 变量提升
+
+- 函数内部赋值了变量，但是是在调用之后声明的，又有全局变量与之同名。那么打印的值为undefined。
+
+
+### 函数参数
+
+### 一些知识点
+
+```javascript
+$(id).className;更换类名
+$(id).innerHtml;更换内容
+// 自动获取焦点 
+$(id).focus();
+// 鼠标移动到输入框全选
+$(id).onmouseover=function(){
+	this.select();
+}
+docment.getElementsByTagName();
+```
+
