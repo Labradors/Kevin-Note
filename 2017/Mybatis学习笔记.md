@@ -228,4 +228,73 @@ public class UserCustom extends User {
 ## 动态sql
 
 - Mybatis重点是对sql的灵活解析和处理
+
 - 将自定义查询条件查询用户列表和查询用户列表总记录数改为动态sql
+
+- ```xml
+  <!-- 动态sql -->
+  	<select id="dynamicFindUserByCustom" parameterType="tech.jiangtao.mybatis.pojo.UserQuery" resultType="tech.jiangtao.mybatis.pojo.User">
+  		select * from user where
+  		<where>
+  			<if test="userCustom!=null">
+  				<if test="userCustom.username!=null and userCustom.username!=''">
+  					and username like '%${userCustom.username}%'
+  				</if>
+  				<if test="userCustom.sex!=null and userCustom.sex!=''">
+  					and sex=#{userCustom.sex}
+  				</if>
+  			</if>
+  		</where>
+  	</select>
+  ```
+
+### sql片段
+
+1. 可以将通用的sql语句抽取出来。相同业务抽离更好
+2. 建议对单表的查询条件进行抽取
+
+```xml
+	<sql id="sql_query_user">
+		<if test="userCustom!=null">
+				<if test="userCustom.username!=null and userCustom.username!=''">
+					and username like '%${userCustom.username}%'
+				</if>
+				<if test="userCustom.sex!=null and userCustom.sex!=''">
+					and sex=#{userCustom.sex}
+				</if>
+			</if>
+	</sql>
+```
+
+```xml
+	<!-- 动态sql,根据sql片段抽离 -->
+	<select id="dynamicFindUserByCustom1" parameterType="tech.jiangtao.mybatis.pojo.UserQuery" resultType="tech.jiangtao.mybatis.pojo.User">
+		select * from user where
+		<where>
+			<!-- 引用的sql片段，如果片段不在同一个文件，前面加入namespace -->
+			<include refid="sql_query_user"></include>
+		</where>
+	</select>
+```
+
+### foreach
+
+1. 在statement中通过foreach遍历parameterType中的集合类型
+2. 根据多个用户id查询用户信息
+
+```xml
+<!-- 解决传入集合，进行遍历取出值进行动态sql -->
+				<!-- SELECT id, username,birthday,address FROM mybatis.user where username like '%张三%' and id in(22,24,25); -->
+				<!-- 
+					open: 开始循环要拼接的串
+					close: 最后要拼接的串
+					item：每一项的值
+					separator： 分隔符
+				 -->
+				 <if test="userCustom.ids!=null">
+					<foreach collection="userCustom.ids" open="and id in(" close=")" item="id" separator="," >
+						#{id}
+					</foreach>
+				</if>
+```
+
