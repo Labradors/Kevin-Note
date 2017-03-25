@@ -130,7 +130,7 @@ try {
    	<typeAliases>
    		<typeAlias type="tech.jiangtao.mybatis.pojo.User" alias="user"/>
    	</typeAliases>
-   ```
+  ```
 
 2. ```xml
    <typeAliases>
@@ -205,12 +205,13 @@ public class UserCustom extends User {
 - 使用ResultType，属性名和字段名必须相同，如果sql语句使用别名，查询出来条数正确，但是没有值。无法映射pojo值。这个问题就可以用ResultMap将字段名和属性名做一个映射配置。
 
 - ```xml
-  	<!-- 使用resultMap做一个结果映射 -->
-  	<!-- 首先需要定义一个映射的resultMap -->
-  	<!-- 如果resultmap在别的地方配置，可以使用命名空间.resultmap进行配置 -->
-  	<select id="findUserListByResultMap" parameterType="java.lang.String" resultMap="userListByResultMap">
-  		select id _id ,username _username, birthday _birthday ,address _address from user where username like '%${value}%'
-  	</select>
+   <!-- 使用resultMap做一个结果映射 -->
+   	<!-- 首先需要定义一个映射的resultMap -->
+   	<!-- 如果resultmap在别的地方配置，可以使用命名空间.resultmap进行配置 -->
+   	<select id="findUserListByResultMap" parameterType="java.lang.String" resultMap="userListByResultMap">
+   		select id _id ,username _username, birthday _birthday ,address _address from user where username like '%${value}%'
+   	</select>
+   ```
   ```
 
 - ```xml
@@ -297,4 +298,436 @@ public class UserCustom extends User {
 					</foreach>
 				</if>
 ```
+
+## ResultMap高级映射
+
+### 如何分析一个陌生的数据模型
+
+1. 了解表记录了什么信息。
+2. 学习单表重要字段的意义（优先了解不能为空的字段，通过外键确定关系）
+3. 学习表与表之间的关系（一对一，一对多，多对多，建立在业务之上的关系）
+
+#### 使用ResultType来一对一查询多表
+
+```xml
+<!-- 查询订单关联用户信息 -->
+	<!-- 使用ResultType进行一对一查询输出 -->
+	<select id="findOrdersUserList" resultType="ordersCustom">
+		SELECT orders.*,user.username,user.sex FROM orders,USER WHERE orders.user_id = user.id
+	</select>
+```
+
+#### ResultMap实现一对一查询
+
+直接在主pojo中添加你需要映射的别的pojo类型
+
+添加pojo到主标
+
+```java
+package tech.jiangtao.mybatis.pojo;
+
+import java.util.Date;
+
+/**
+ * 订单
+ * @author kevin
+ *
+ */
+public class Orders {
+	private int id;
+	private int user_id;
+	private String number;
+	private Date createtime;
+	private String note;
+	
+	// 使用ResultMap来映射一对一的查询
+	private User user;
+	
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public int getUser_id() {
+		return user_id;
+	}
+	public void setUser_id(int user_id) {
+		this.user_id = user_id;
+	}
+	public String getNumber() {
+		return number;
+	}
+	public void setNumber(String number) {
+		this.number = number;
+	}
+	public Date getCreatetime() {
+		return createtime;
+	}
+	public void setCreatetime(Date createtime) {
+		this.createtime = createtime;
+	}
+	public String getNote() {
+		return note;
+	}
+	public void setNote(String note) {
+		this.note = note;
+	}
+	public User getUser() {
+		return user;
+	}
+	public void setUser(User user) {
+		this.user = user;
+	}
+}
+```
+
+配置ResultMap
+
+```xml
+<!-- 查询订单关联用户信息 -->
+	<!-- 使用ResultMap进行一对一查询输出 -->
+	<resultMap type="orders" id="userListResultMap">
+		<id column="id" property="id"/>
+		<result column="user_id" property="user_id"/>
+		<result column="number" property="number"/>
+		<result column="createtime" property="createtime"/>
+		<result column="note" property="note"/>
+		<!-- 关联信息的映射 用于对关联信息映射到单个的pojo映射-->
+			<association property="user" javaType="user">
+				<id column="user_id" property="id"/>
+				<result column="username" property="username"/>
+				<result column="sex" property="sex"/>
+			</association>
+	</resultMap>
+	<select id="findOrdersUserListResultMap" resultMap="userListResultMap">
+		SELECT orders.*,user.username,user.sex FROM orders,USER WHERE orders.user_id = user.id
+	</select>
+```
+
+#### 两者哪个更简单
+
+ ResultType:字段属性对应,这种方法相对较简单，所以应用广泛
+
+ResultMap: 需要配置association，应用有点点复杂，如果要实现延迟加载，就只能用ResultMap来实现，如果方便对关联信息进行解析。则使用更加好。
+
+
+
+#### ResultMap实现一对多查询
+
+```xml
+	<!-- 查询订单-订单详情-关联用户信息-商品信息 -->
+	<!-- 使用ResultMap进行一对多查询输出 -->
+	<!-- 用户信息 -->
+	<!-- 订单信息 -->
+	<!-- 订单详细信息 -->
+	<!-- 商品信息 -->
+	<resultMap type="user" id="userOrderAndOrdersDetailAndItemsListResultMap">
+			<id column="user_id" property="id"/>
+			<result column="username" property="username"/>
+			<result column="birthday" property="birthday"/>
+			<result column="sex" property="sex"/>
+			<result column="address" property="address"/>
+			<!-- 订单信息 -->
+				<collection property="ordersList" ofType="orders">
+					<id column="id" property="id"/>
+					<result column="number" property="number"/>
+					<result column="createtime" property="createtime"/>
+					<result column="note" property="note"/>
+					<!-- 订单明细 -->
+					<collection property="orderdetails" ofType="tech.jiangtao.mybatis.pojo.Orderdetail">
+						<id column="orders_id" property="id"/>
+						<result column="items_id" property="items_id"/>
+						<result column="items_num" property="items_num"/>
+						<!-- 商品信息 -->
+						<association property="items" javaType="items">
+							<id column="items_id" property="id"/>
+							<result column="name" property="name"/>
+							<result column="price" property="price"/>
+							<result column="detail" property="detail"/>
+							<result column="pic" property="pic"/>
+						</association>
+					</collection>
+				</collection>
+	</resultMap>
+	<select id="findUserOrderAndOrdersDetailAndItemsListResultMap" resultMap="userOrderAndOrdersDetailAndItemsListResultMap">
+				SELECT USER.*,
+				        orders.number,
+				        orders.createtime,
+				        orders.note,
+				        orderdetail.orders_id,
+				        orderdetail.items_id,
+				        orderdetail.items_num,
+				        items.name,
+				        items.price,
+				        items.detail,
+				        items.pic
+				FROM USER,orders,orderdetail,items
+				WHERE user.id = orders.user_id
+				        AND orderdetail.orders_id=orders.id
+				        AND items.id = orderdetail.items_id
+	</select>
+```
+
+#### 延迟加载
+
+在进行数据库查询时，为了提高数据库的性能，尽量使用单表查询。
+
+如果一开始查询能够满足需求，那就单表。当需要关联信息时，再进行关联多表查询。这就叫延迟加载。延迟加载是为了提高数据库性能。
+
+配置延迟加载
+
+```xml
+<settings>
+	<!-- 开启延迟加载 -->
+		<setting name="lazyLoadingEnabled" value="true"/>
+		<setting name="aggressiveLazyLoading" value="false"/>
+	</settings>
+```
+
+```xml
+	<!-- 延迟加载 只查询订单，对用户信息进行延迟加载 -->
+	<resultMap type="orders" id="ordersCustomLazyLoading">
+		<id column="id" property="id"/>
+		<result column="user_id" property="user_id"/>
+		<result column="number" property="number"/>
+		<result column="createtime" property="createtime"/>
+		<result column="note" property="note"/>
+		<!-- 关联信息的映射 用于对关联信息映射到单个的pojo映射-->
+			<association property="user" javaType="user" select="tech.jiangtao.mybatis.mapper.UserMapper.findUserById" column="user_id">
+			</association>
+	</resultMap>
+	<select id="findOrdersUserListLazyLoading" resultMap="ordersCustomLazyLoading">
+		SELECT orders.* FROM orders
+	</select>
+```
+
+
+
+## 查询缓存
+
+### 持久层缓存
+
+#### 一级缓存
+
+- myabtis一级缓存是sqlsession级别的。
+- select会缓存一级缓存，但是如果有iud，则会删除所有缓存。
+- mybatis不需要配置一级缓存。mybatis和spring整合后没有一级缓存。
+
+
+
+#### 二级缓存
+
+- mybatis二级缓存是mapper级别的缓存。指的是同一个namespace的缓存。
+- mybatis默认没有开启二级缓存。
+
+开启二级缓存:
+
+```xml
+<setting name="cacheEnabled" value="true"/>
+```
+
+```xml
+在mapper中添加<cache/>
+pojo实现java.io.Serializable
+```
+
+```java
+@Test
+	public void testCache2() {
+		SqlSession session = sessionFactory.openSession();
+		SqlSession session1 = sessionFactory.openSession();
+		UserMapper mapper = session.getMapper(UserMapper.class);
+		UserMapper mapper1 = session1.getMapper(UserMapper.class);
+		try {
+			System.out.println(mapper.findUserById(1).toString());
+			session.close();
+			System.out.println(mapper1.findUserById(1).toString());
+			session1.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+```
+
+
+
+#### 关闭二级缓存
+
+```xml
+<!-- 根据用户id，查询用户信息，只能是单条数据 -->
+	<select id="findUserById" parameterType="int" resultType="tech.jiangtao.mybatis.pojo.User" useCache="false">
+		select * from user where id= #{id}
+	</select>
+```
+
+#### 刷新缓存（全部清空）
+
+```xml
+	<!-- 向用户表插入一条记录 -->
+	<insert id="insertUser" parameterType="tech.jiangtao.mybatis.pojo.User" flushCache="true">
+		<selectKey keyProperty="id" order="AFTER" resultType="int">
+			select LAST_INSERT_ID()
+		</selectKey>
+		insert into user(username,sex,birthday,address) values(#{username},#{sex},#{birthday},#{address});
+	</insert>
+```
+
+## Mybatis和ehcache整合
+
+通过实现Mybatis的cache接口，将缓存数据托管给别的框架。
+
+添加配置文件ehcache.xml
+
+```xml
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../config/ehcache.xsd">
+	<!--diskStore：缓存数据持久化的目录 地址  -->
+	<diskStore path="./" />
+	<defaultCache 
+		maxElementsInMemory="1000" 
+		maxElementsOnDisk="10000000"
+		eternal="false" 
+		overflowToDisk="false" 
+		diskPersistent="true"
+		timeToIdleSeconds="120"
+		timeToLiveSeconds="120" 
+		diskExpiryThreadIntervalSeconds="120"
+		memoryStoreEvictionPolicy="LRU">
+	</defaultCache>
+</ehcache>
+```
+
+在mapper中添加缓存
+
+```xml
+<cache type="org.mybatis.caches.ehcache.EhcacheCache">
+		<!-- 属性设置 -->
+		<!-- <property name="" value=""/> -->
+	</cache>
+```
+
+#### Mybatis缓存的应用场景和局限性
+
+- 细粒度缓存实现不好。
+- 使用在查询较多，更改较少的数据进行缓存
+
+## Mybatis和Spring的整合
+
+一波波的整合
+
+- 配置文件:db.properties
+
+```xml
+jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url1=jdbc:mysql://localhost:3306/mybatis
+jdbc.url2=jdbc:mysql://139.59.30.244:3306/mybatis
+jdbc.username1=root
+jdbc.password1=123456
+jdbc.username2=root
+jdbc.password2=654321
+```
+
+- 配置文件: log4j.properties
+
+```xml
+# Root logger option
+log4j.rootLogger=DEBUG, stdout, file
+log4j.logger.org.hibernate=info
+
+# Redirect log messages to console
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.Target=System.out
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n
+
+# Redirect log messages to a log file, support file rolling.
+log4j.appender.file=org.apache.log4j.RollingFileAppender
+log4j.appender.file.File=./common.log
+log4j.appender.file.MaxFileSize=5MB
+log4j.appender.file.MaxBackupIndex=10
+log4j.appender.file.layout=org.apache.log4j.PatternLayout
+log4j.appender.file.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n
+```
+
+- 配置文件:SqlMapConfig.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<typeAlias type="tech.jiangtao.mybatis.pojo.User" alias="user"/>
+		<!-- 批量别名 -->
+		<package name="tech.jiangtao.mybatis.pojo"/>
+	</typeAliases>
+	<mappers>
+		 <mapper resource="sqlmap/user.xml"/>
+		 <package name="tech.jiangtao.mybatis.mapper"/>
+	</mappers>
+	
+</configuration>
+```
+
+- 配置文件: applicationContext.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd 
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.2.xsd 
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-3.2.xsd 
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-3.2.xsd ">
+		
+	<!-- 加载配置文件 -->
+	<context:property-placeholder location="classpath:db.properties" />
+	<!-- 数据库连接池 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="url" value="${jdbc.url1}" />
+		<property name="username" value="${jdbc.username1}" />
+		<property name="password" value="${jdbc.password1}" />
+		<property name="maxActive" value="10" />
+		<property name="maxIdle" value="5" />
+	</bean>
+		<!-- SqlsessionFactory -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- 数据源 -->
+		<property name="dataSource" ref="dataSource"/>
+		<!-- mybatis配置文件 -->
+		<property name="configLocation" value="classpath:SqlMapConfig.xml"/>
+	</bean>
+	
+	<!-- 配置dao -->
+	<bean id="userDao" class="tech.jiangtao.mybatis.dao.UserDaoImpl">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="tech.jiangtao.mybatis.mapper"/>
+		<!-- 使用sqlSessionFactoryBeanName -->
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>	
+	</bean> 
+</beans>
+```
+
+没什么可配置的.
+
+
+
+## Mybatis逆向工程
+
+逆向工程配置:
 
