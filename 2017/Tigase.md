@@ -19,5 +19,51 @@ Monitoring via HTTP, SNMP, JMX, XMPP.
 
 Zoosk，是一个具有5000万会员的浪漫的社交约会网站 
 
-推库
+## 连接webui
+
+bosh地址: ws://localhost:5290/bosh
+
+ws://localhost:5290/
+
+bosh://localhost:5280/
+
+- 5222, 5223 - default XMPP socket ports
+- 5280 - BOSH connections
+- 5290 - WebSocket connections
+- 5269 - s2s/federation port
+- 5277 - cluster connections
+- 9050 - JMX port
+- ​
+
+
+## 编译运行
+
+```
+mvn -Pdist -f modules/master/pom.xml clean install
+```
+
+## 找不到数据库
+
+```
+tigase.db.DBInitException: Problem initializing jdbc connection: jdbc:mysql://127.0.0.1:3306/tigasedb?user=root&password=123456
+```
+
+## 消息格式
+
+```xml
+<message id="7boj2-135" type="chat" xmlns="jabber:client" from="测试群一@muc-group.dc-a4b8eb92-xmpp.jiangtao.tech." to="ceshi2@dc-a4b8eb92-xmpp.jiangtao.tech.">
+  <body>放反</body>
+  <thread>c87dc2cc-2436-4e7d-9699-d75c7f082f78</thread>
+  <data_type xmlns="data:extension"><type>text</type></data_type><message_type xmlns="message:extension"><type>groupChat</type></message_type>
+  <message-sender xmlns="sender:extension"><value>测试三@dc-a4b8eb92-xmpp.jiangtao.tech./5e93813a-7992-4d43-a9e1-a3ad9ef81669</value></message-sender>
+</message>
+```
+
+## mysql源码安装
+
+```
+问题1:
+mysqld_safe Directory '/var/lib/mysql' for UNIX socket file don't exists.
+The server quit without updating PID file (/var/lib/mysql/l[FAILED].localdomain.pid)
+```
 
